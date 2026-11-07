@@ -48,18 +48,18 @@ const DfaNfaVisualizer = () => {
         setGraph(newGraph);
     }, []);
 
-    
+
     const setStartingState = (stateId) => {
         // Update visual appearance of previous start state
         if (startState) {
             const prevStartState = states.find(s => s.id === startState);
             prevStartState?.node.attr('body/fill', acceptingStates.has(prevStartState.id) ? '#90EE90' : '#ccccff');
         }
-    
+
         // Update visual appearance of new start state
         const newStartState = states.find(s => s.id === stateId);
         newStartState?.node.attr('body/fill', '#FFE4E1');
-    
+
         setStartState(stateId);
     };
 
@@ -103,13 +103,13 @@ const DfaNfaVisualizer = () => {
         circle.position(x, y);
         circle.resize(60, 60);
         circle.attr({
-            body: { 
-                fill: '#ccccff', 
+            body: {
+                fill: '#ccccff',
                 strokeWidth: 3
             },
-            label: { 
-                text: label, 
-                fill: 'black', 
+            label: {
+                text: label,
+                fill: 'black',
                 fontWeight: 'bold',
                 fontSize: 16,
                 textAnchor: 'middle',
@@ -179,9 +179,9 @@ const DfaNfaVisualizer = () => {
                 line: {
                     stroke: 'var(--accent-color)',
                     strokeWidth: 2.5,
-                    targetMarker: { 
-                        type: 'path', 
-                        d: 'M 12 -6 0 0 12 6 Z', 
+                    targetMarker: {
+                        type: 'path',
+                        d: 'M 12 -6 0 0 12 6 Z',
                         fill: 'var(--accent-color)',
                         stroke: 'var(--accent-color)'
                     },
@@ -200,9 +200,9 @@ const DfaNfaVisualizer = () => {
                         selector: 'label'
                     }
                 ],
-                attrs: { 
-                    label: { 
-                        text: transitionLabel, 
+                attrs: {
+                    label: {
+                        text: transitionLabel,
                         fontSize: 15,
                         fontWeight: 'bold',
                         fontFamily: 'var(--font-family)',
@@ -225,12 +225,12 @@ const DfaNfaVisualizer = () => {
             link.addTo(graph);
         }
 
-        setTransitions([...transitions, { 
-            sourceId: sourceState.id, 
-            source: sourceState.label, 
-            targetId: targetState.id, 
-            target: targetState.label, 
-            label: transitionLabel 
+        setTransitions([...transitions, {
+            sourceId: sourceState.id,
+            source: sourceState.label,
+            targetId: targetState.id,
+            target: targetState.label,
+            label: transitionLabel
         }]);
         setIsAddingTransition(false);
     };
@@ -254,7 +254,7 @@ const DfaNfaVisualizer = () => {
                 target: transition.target
             }))
         };
-    
+
         const blob = new Blob([JSON.stringify(machineData, null, 2)], { type: 'application/json' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
@@ -265,7 +265,7 @@ const DfaNfaVisualizer = () => {
     const loadMachine = (event) => {
         const file = event.target.files[0];
         if (!file) return;
-    
+
         const reader = new FileReader();
         reader.onload = (e) => {
             const data = JSON.parse(e.target.result);
@@ -274,7 +274,7 @@ const DfaNfaVisualizer = () => {
             setTransitions([]);
             setStateCounter(0);
             setAcceptingStates(new Set());
-    
+
             const stateMap = {};
             const newAcceptingStates = new Set();
 
@@ -283,43 +283,43 @@ const DfaNfaVisualizer = () => {
             data.states.forEach(state => {
                 const circle = new shapes.standard.Circle({
                     id: state.id  // Set the ID explicitly
-                }); 
+                });
                 circle.position(state.x, state.y);
                 circle.resize(60, 60);
                 circle.attr({
-                    body: { 
-                        fill: state.isAccepting ? '#90EE90' : data.startState === circle.id ? '#FFE4E1':'#ccccff', 
-                        strokeWidth: 3 
+                    body: {
+                        fill: state.isAccepting ? '#90EE90' : data.startState === circle.id ? '#FFE4E1':'#ccccff',
+                        strokeWidth: 3
                     },
                     label: { text: state.label, fill: 'black', fontWeight: 'bold' },
                 });
                 circle.addTo(graph);
-                
+
                 stateMap[state.id] = circle.id;
                 if (state.isAccepting) {
                     newAcceptingStates.add(circle.id);
                 }
-                
+
                 setStates(prevStates => [
                     ...prevStates,
                     { id: circle.id, label: state.label, node: circle }
                 ]);
                 setStateCounter(prevCounter => prevCounter + 1);
             });
-    
+
             setAcceptingStates(newAcceptingStates);
-    
+
             data.transitions.forEach(transition => {
                 const sourceStateId = stateMap[transition.sourceId];
                 const targetStateId = stateMap[transition.targetId];
-    
+
                 if (sourceStateId && targetStateId) {
                     const existingLink = graph.getLinks().find(link => {
                         const sourceId = link.getSourceElement().id;
                         const targetId = link.getTargetElement().id;
                         return sourceId === sourceStateId && targetId === targetStateId;
                     });
-    
+
                     if (existingLink) {
                         const existingLabel = existingLink.labels()[0].attrs.text.text;
                         existingLink.labels([{
@@ -330,7 +330,7 @@ const DfaNfaVisualizer = () => {
                         const link = new shapes.standard.Link();
                         link.source({ id: sourceStateId });
                         link.target({ id: targetStateId });
-    
+
                         if (sourceStateId === targetStateId) {
                             link.router({
                                 name: 'manhattan',
@@ -351,7 +351,7 @@ const DfaNfaVisualizer = () => {
                                 },
                             });
                         }
-    
+
                         link.attr({
                             line: {
                                 stroke: 'black',
@@ -359,23 +359,23 @@ const DfaNfaVisualizer = () => {
                                 targetMarker: { type: 'path', d: 'M 10 -5 0 0 10 5 Z', fill: 'black' },
                             },
                         });
-    
+
                         link.labels([{
                             attrs: { text: { text: transition.label, fontSize: 14, fontWeight: 'bold' } },
                             position: 0.5,
                         }]);
-    
+
                         link.addTo(graph);
                     }
-    
+
                     setTransitions(prevTransitions => [
                         ...prevTransitions,
-                        { 
-                            sourceId: transition.sourceId, 
-                            targetId: transition.targetId, 
-                            label: transition.label, 
-                            source: transition.source, 
-                            target: transition.target 
+                        {
+                            sourceId: transition.sourceId,
+                            targetId: transition.targetId,
+                            label: transition.label,
+                            source: transition.source,
+                            target: transition.target
                         }
                     ]);
                 }
@@ -395,11 +395,17 @@ const DfaNfaVisualizer = () => {
             return;
         }
 
+        // Optimized transition lookup: Map source and label to target
+        const transitionMap = new Map();
+        transitions.forEach(t => {
+            const key = `${t.source}-${t.label}`;
+            transitionMap.set(key, t.target);
+        });
+
         // Start at the designated start state
         let currentState = states.find(s => s.id === startState)?.label;
-        
-        
-        if(!states.find(t => t.label === currentState)) {
+
+        if(!currentState || !states.find(t => t.label === currentState)) {
             setTestResult({
                 accepted: false,
                 message: 'Error: States, transitions, or input string not properly defined',
@@ -407,16 +413,17 @@ const DfaNfaVisualizer = () => {
             });
             return;
         }
+
         //initialize array which holds path
         const path = [currentState];
+
         // Process each character in the input string
         for (const symbol of testString) {
-            const transition = transitions.find(
-                t => t.source === currentState && t.label === symbol
-            );
+            const key = `${currentState}-${symbol}`;
+            const targetState = transitionMap.get(key);
 
             // If no transition is found, reject the string
-            if (!transition) {
+            if (!targetState) {
                 setTestResult({
                     accepted: false,
                     message: `Rejected: No transition found from state ${currentState} with symbol ${symbol}`,
@@ -425,8 +432,9 @@ const DfaNfaVisualizer = () => {
                 highlightPath(path);
                 return;
             }
+
             //set current state to the state reached on given input & add to path
-            currentState = transition.target;
+            currentState = targetState;
             path.push(currentState);
         }
 
@@ -450,7 +458,7 @@ const DfaNfaVisualizer = () => {
             });
             return;
         }
-    
+
         // Helper function to perform DFS from a given state with remaining input
         const dfs = (currentState, remainingInput, currentPath) => {
             // If we've processed all input, explore epsilon transitions and check accepting states
@@ -463,38 +471,38 @@ const DfaNfaVisualizer = () => {
                         path: currentPath
                     };
                 }
-        
+
                 // Explore epsilon transitions
                 const epsilonTransitions = transitions.filter(
                     t => t.source === currentState && t.label === "ε"
                 );
-        
+
                 for (const transition of epsilonTransitions) {
                     const result = dfs(
                         transition.target,
                         remainingInput, // Keep input unchanged for epsilon transitions
                         [...currentPath, transition.target]
                     );
-        
+
                     // If an accepting path is found, return it
                     if (result) {
                         return result;
                     }
                 }
-        
+
                 // If no accepting path is found, return null
                 return null;
             }
-        
+
             // Process the next symbol in the input
             const symbol = remainingInput[0];
             const restInput = remainingInput.slice(1);
-        
+
             // Find all possible transitions for the current symbol or epsilon
             const possibleTransitions = transitions.filter(
                 t => t.source === currentState && (t.label === symbol || t.label === "ε")
             );
-        
+
             // Try each possible transition
             for (const transition of possibleTransitions) {
                 const result = dfs(
@@ -503,22 +511,22 @@ const DfaNfaVisualizer = () => {
                     transition.label === "ε" ? remainingInput : restInput,
                     [...currentPath, transition.target]
                 );
-        
+
                 // If an accepting path is found, return it
                 if (result) {
                     return result;
                 }
             }
-        
+
             // If no accepting path is found, return null
             return null;
         };
-        
-        
-    
+
+
+
         // Start the search from the initial state
         const startStateLabel = states.find(s => s.id === startState)?.label;
-        
+
         if (!startStateLabel) {
             setTestResult({
                 accepted: false,
@@ -527,11 +535,11 @@ const DfaNfaVisualizer = () => {
             });
             return;
         }
-    
+
         // Convert input string to array of characters
         const inputArray = Array.from(testString);
         const result = dfs(startStateLabel, inputArray, [startStateLabel]);
-    
+
         if (result) {
             setTestResult({
                 accepted: true,
@@ -545,7 +553,7 @@ const DfaNfaVisualizer = () => {
                 path: []
             });
         }
-    
+
         // Highlight the accepting path if one was found
         if (result && result.path) {
             highlightPath(result.path);
@@ -645,7 +653,7 @@ const DfaNfaVisualizer = () => {
           alert('Please upload both DFA files first');
           return;
         }
-    
+
         // Basic validation that both are DFAs
         if (dfa1.machineType !== 'DFA' || dfa2.machineType !== 'DFA') {
           setEquivalenceResult({
@@ -654,22 +662,33 @@ const DfaNfaVisualizer = () => {
           });
           return;
         }
+
+        // Pre-map transitions for faster lookup
+        const getTransMap = (dfa) => {
+            const map = new Map();
+            dfa.transitions.forEach(t => map.set(`${t.sourceId}-${t.label}`, t.targetId));
+            return map;
+        };
+        const transMap1 = getTransMap(dfa1);
+        const transMap2 = getTransMap(dfa2);
+
+        const stateMap1 = new Map(dfa1.states.map(s => [s.id, s]));
+        const stateMap2 = new Map(dfa2.states.map(s => [s.id, s]));
+
         const newMachine = {
             machineType: "DFA",
             startState: null,
             states: [],
             transitions: []
         }
-    
-        let alphabet = new Set();
+
+        const alphabet = new Set();
         dfa1.transitions.forEach(t => alphabet.add(t.label));
-    
-        // Stack to keep track of state pairs we need to process
+
         let statesToProcess = [];
-    
-        // Start with initial states
-        let currState1 = dfa1.states.find(s => s.id === dfa1.startState);
-        let currState2 = dfa2.states.find(s => s.id === dfa2.startState);
+
+        const currState1 = stateMap1.get(dfa1.startState);
+        const currState2 = stateMap2.get(dfa2.startState);
         const currStatePair = {
             id: `${currState1.id},${currState2.id}`,
             label: `${currState1.label},${currState2.label}`,
@@ -677,64 +696,56 @@ const DfaNfaVisualizer = () => {
               (currState1.isAccepting && !currState2.isAccepting) ||
               (!currState1.isAccepting && currState2.isAccepting)
         };
-        
-        // Initialize machine with start state
+
         newMachine.startState = currStatePair;
         newMachine.states.push(currStatePair);
         statesToProcess.push([currState1, currState2]);
-    
-        // Process states until no new ones are found (lazy construction)
+
+        const processedPairs = new Map();
+        processedPairs.set(currStatePair.id, currStatePair);
+
         while (statesToProcess.length > 0) {
-            [currState1, currState2] = statesToProcess.pop();
-            const currentPair = newMachine.states.find(s => s.id === `${currState1.id},${currState2.id}`);
-    
+            const [s1, s2] = statesToProcess.pop();
+            const currentPair = processedPairs.get(`${s1.id},${s2.id}`);
+
             alphabet.forEach(letter => {
-                // Find transitions for current letter
-                const currTrans1 = dfa1.transitions.find(t => t.sourceId === currState1.id && t.label === letter);
-                const currTrans2 = dfa2.transitions.find(t => t.sourceId === currState2.id && t.label === letter);
-    
-                // Find next states
-                const nextState1 = dfa1.states.find(state => state.id === currTrans1.targetId);
-                const nextState2 = dfa2.states.find(state => state.id === currTrans2.targetId);
-    
-                // Create next state pair
-                const nextStatePair = {
-                    id: `${nextState1.id},${nextState2.id}`,
-                    label: `${nextState1.label},${nextState2.label}`,
-                    isAccepting:
-                        (nextState1.isAccepting && !nextState2.isAccepting) ||
-                        (!nextState1.isAccepting && nextState2.isAccepting)
-                };
-    
-                // Add transition to new machine
-                const newTransition = {
-                    sourceId: currentPair.id,
-                    targetId: nextStatePair.id,
-                    label: letter
-                };
-    
-                // If this is a new state, add it for processing
-                if (!newMachine.states.some(s => s.id === nextStatePair.id)) {
-                    newMachine.states.push(nextStatePair);
-                    statesToProcess.push([nextState1, nextState2]);
-                    console.log(`Found new state: ${nextStatePair.label}`);
+                const nextId1 = transMap1.get(`${s1.id}-${letter}`);
+                const nextId2 = transMap2.get(`${s2.id}-${letter}`);
+
+                if (nextId1 && nextId2) {
+                    const nextState1 = stateMap1.get(nextId1);
+                    const nextState2 = stateMap2.get(nextId2);
+
+                    const nextStatePair = {
+                        id: `${nextState1.id},${nextState2.id}`,
+                        label: `${nextState1.label},${nextState2.label}`,
+                        isAccepting:
+                            (nextState1.isAccepting && !nextState2.isAccepting) ||
+                            (!nextState1.isAccepting && nextState2.isAccepting)
+                    };
+
+                    const newTransition = {
+                        sourceId: currentPair.id,
+                        targetId: nextStatePair.id,
+                        label: letter
+                    };
+
+                    if (!processedPairs.has(nextStatePair.id)) {
+                        processedPairs.set(nextStatePair.id, nextStatePair);
+                        newMachine.states.push(nextStatePair);
+                        statesToProcess.push([nextState1, nextState2]);
+                    }
+                    newMachine.transitions.push(newTransition);
                 }
-                newMachine.transitions.push(newTransition);
-    
-                console.log(`Processing state ${currentPair.label} with letter ${letter} -> ${nextStatePair.label}`);
             });
         }
-    
-        console.log("Final Machine:", newMachine);
-        
-        // BFS to check for accepting states
+
         let queue = [newMachine.startState];
         let visited = new Set([newMachine.startState.id]);
 
         while (queue.length > 0) {
             const currentState = queue.shift();
-            
-            // Check if current state is accepting
+
             if (currentState.isAccepting) {
                 setEquivalenceResult({
                     equivalent: false,
@@ -743,30 +754,27 @@ const DfaNfaVisualizer = () => {
                 return;
             }
 
-            // Get all transitions from current state
             const stateTransitions = newMachine.transitions.filter(t => t.sourceId === currentState.id);
-            
-            // Add unvisited target states to queue
+
             stateTransitions.forEach(transition => {
                 const targetState = newMachine.states.find(s => s.id === transition.targetId);
-                if (!visited.has(targetState.id)) {
+                if (targetState && !visited.has(targetState.id)) {
                     visited.add(targetState.id);
                     queue.push(targetState);
                 }
             });
         }
 
-            // If no accepting states were found, the DFAs are equivalent
-            setEquivalenceResult({
-                equivalent: true,
-                message: 'Analysis complete. The DFAs are equivalent.'
-            });
+        setEquivalenceResult({
+            equivalent: true,
+            message: 'Analysis complete. The DFAs are equivalent.'
+        });
     };
 
     const clearMachine = () => {
         // Clear the graph
         graph.clear();
-        
+
         // Reset all states
         setStates([]);
         setTransitions([]);
@@ -785,8 +793,8 @@ const DfaNfaVisualizer = () => {
         <div style={{ display: 'flex', alignItems: 'flex-start', minWidth: '1000px'}}>
             <div>
                 <div>
-                <select 
-                    value={machineType || ''} 
+                <select
+                    value={machineType || ''}
                     onChange={(e) => setMachineType(e.target.value)}
                 >
                     <option value="" disabled>
@@ -822,7 +830,7 @@ const DfaNfaVisualizer = () => {
                 </div>
                     <div className="test-container">
                         <h4>Test String (Starting from {states.find(s => s.id === startState)?.label})</h4>
-                        
+
                         {/* String input and test button */}
                         <div style={{ marginTop: '5px' }}>
                             <input
@@ -832,11 +840,11 @@ const DfaNfaVisualizer = () => {
                                     //on change of input reset path and test result
                                     resetHighlighting();
                                     setTestString(e.target.value);
-                                    setTestResult(null); 
+                                    setTestResult(null);
                                 }}
                                 placeholder="Enter test string"
                             />
-                            <button 
+                            <button
                                 onClick={machineType === "DFA" ? testInput : testNFAInput}
                                 //disabled={}
                                 className="button"
@@ -859,7 +867,7 @@ const DfaNfaVisualizer = () => {
                                     accept=".json"
                                     style={{color:'black'}}
                                 />
-                                <button 
+                                <button
                                     onClick={checkDfaEquivalence}
                                     className="button"
                                     disabled={!dfa1 || !dfa2}
@@ -867,7 +875,7 @@ const DfaNfaVisualizer = () => {
                                     Check Equivalence
                                 </button>
                             </div>
-                            
+
                             {equivalenceResult && (
                                 <div style={{
                                     marginTop: '10px',
@@ -879,7 +887,7 @@ const DfaNfaVisualizer = () => {
                                 </div>
                             )}
                         </div>
-    
+
                             {/* Result display */}
                             {testResult && (
                                 <div style={{
@@ -897,7 +905,7 @@ const DfaNfaVisualizer = () => {
                                 </div>
                             )}
                     </div>
-                    
+
                         {isAddingTransition && (
                             <div style={{ marginTop: '10px' }}>
                                 <h4>Adding Transition</h4>
