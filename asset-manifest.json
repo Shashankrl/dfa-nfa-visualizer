@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/dfa-nfa-visualizer/static/css/main.9a2eeede.css",
+    "main.js": "/dfa-nfa-visualizer/static/js/main.b0b1fd65.js",
+    "static/js/453.f7453bf5.chunk.js": "/dfa-nfa-visualizer/static/js/453.f7453bf5.chunk.js",
+    "index.html": "/dfa-nfa-visualizer/index.html",
+    "main.9a2eeede.css.map": "/dfa-nfa-visualizer/static/css/main.9a2eeede.css.map",
+    "main.b0b1fd65.js.map": "/dfa-nfa-visualizer/static/js/main.b0b1fd65.js.map",
+    "453.f7453bf5.chunk.js.map": "/dfa-nfa-visualizer/static/js/453.f7453bf5.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.9a2eeede.css",
+    "static/js/main.b0b1fd65.js"
+  ]
+}
