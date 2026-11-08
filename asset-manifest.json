@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/dfa-nfa-visualizer/static/css/main.9a2eeede.css",
-    "main.js": "/dfa-nfa-visualizer/static/js/main.fb956940.js",
+    "main.css": "/dfa-nfa-visualizer/static/css/main.3a0d53ca.css",
+    "main.js": "/dfa-nfa-visualizer/static/js/main.196612c3.js",
     "static/js/453.f7453bf5.chunk.js": "/dfa-nfa-visualizer/static/js/453.f7453bf5.chunk.js",
     "index.html": "/dfa-nfa-visualizer/index.html",
-    "main.9a2eeede.css.map": "/dfa-nfa-visualizer/static/css/main.9a2eeede.css.map",
-    "main.fb956940.js.map": "/dfa-nfa-visualizer/static/js/main.fb956940.js.map",
+    "main.3a0d53ca.css.map": "/dfa-nfa-visualizer/static/css/main.3a0d53ca.css.map",
+    "main.196612c3.js.map": "/dfa-nfa-visualizer/static/js/main.196612c3.js.map",
     "453.f7453bf5.chunk.js.map": "/dfa-nfa-visualizer/static/js/453.f7453bf5.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.9a2eeede.css",
-    "static/js/main.fb956940.js"
+    "static/css/main.3a0d53ca.css",
+    "static/js/main.196612c3.js"
   ]
 }
