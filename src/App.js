@@ -8,7 +8,6 @@ function App() {
     <div className="app-container">
       <header className="app-header">
         <h1 className="title">DFA/NFA Visualizer</h1>
-        <h2 className="subtitle">Created by Blake Marshall, Homero Arellano, & Jacob Sellers</h2>
         <div style={{ marginTop: '20px' }}>
           <a 
             href="https://github.com/officialblake/Draw-DFA" 

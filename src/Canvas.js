@@ -262,6 +262,120 @@ const DfaNfaVisualizer = () => {
         link.click();
     };
 
+    const renderMachineData = (data) => {
+        graph.clear();
+        setStates([]);
+        setTransitions([]);
+        setStateCounter(0);
+        setAcceptingStates(new Set());
+
+        const stateMap = {};
+        const newAcceptingStates = new Set();
+
+        setStartingState(data.startState);
+        setMachineType(data.machineType);
+        data.states.forEach(state => {
+            const circle = new shapes.standard.Circle({
+                id: state.id
+            });
+            circle.position(state.x, state.y);
+            circle.resize(60, 60);
+            circle.attr({
+                body: {
+                    fill: state.isAccepting ? '#90EE90' : data.startState === circle.id ? '#FFE4E1':'#ccccff',
+                    strokeWidth: 3
+                },
+                label: { text: state.label, fill: 'black', fontWeight: 'bold' },
+            });
+            circle.addTo(graph);
+
+            stateMap[state.id] = circle.id;
+            if (state.isAccepting) {
+                newAcceptingStates.add(circle.id);
+            }
+
+            setStates(prevStates => [
+                ...prevStates,
+                { id: circle.id, label: state.label, node: circle }
+            ]);
+            setStateCounter(prevCounter => prevCounter + 1);
+        });
+
+        setAcceptingStates(newAcceptingStates);
+
+        data.transitions.forEach(transition => {
+            const sourceStateId = stateMap[transition.sourceId];
+            const targetStateId = stateMap[transition.targetId];
+
+            if (sourceStateId && targetStateId) {
+                const existingLink = graph.getLinks().find(link => {
+                    const sourceId = link.getSourceElement().id;
+                    const targetId = link.getTargetElement().id;
+                    return sourceId === sourceStateId && targetId === targetStateId;
+                });
+
+                if (existingLink) {
+                    const existingLabel = existingLink.labels()[0].attrs.text.text;
+                    existingLink.labels([{
+                        attrs: { text: { text: `${existingLabel}, ${transition.label}`, fontSize: 14, fontWeight: 'bold' } },
+                        position: 0.5,
+                    }]);
+                } else {
+                    const link = new shapes.standard.Link();
+                    link.source({ id: sourceStateId });
+                    link.target({ id: targetStateId });
+
+                    if (sourceStateId === targetStateId) {
+                        link.router({
+                            name: 'manhattan',
+                            args: {
+                                padding: 20,
+                                startDirections: ['top'],
+                                endDirections: ['bottom'],
+                            },
+                        });
+                        link.connector('rounded');
+                    } else {
+                        link.router({
+                            name: 'manhattan',
+                            args: {
+                                padding: 20,
+                                startDirections: ['top', 'left', 'bottom', 'right'],
+                                endDirections: ['top', 'left', 'bottom', 'right'],
+                            },
+                        });
+                    }
+
+                    link.attr({
+                        line: {
+                            stroke: 'black',
+                            strokeWidth: 2,
+                            targetMarker: { type: 'path', d: 'M 10 -5 0 0 10 5 Z', fill: 'black' },
+                        },
+                    });
+
+                    link.labels([{
+                        attrs: { text: { text: transition.label, fontSize: 14, fontWeight: 'bold' } },
+                        position: 0.5,
+                    }]);
+
+                    link.addTo(graph);
+                }
+
+                setTransitions(prevTransitions => [
+                    ...prevTransitions,
+                    {
+                        sourceId: transition.sourceId,
+                        targetId: transition.targetId,
+                        label: transition.label,
+                        source: transition.source,
+                        target: transition.target
+                    }
+                ]);
+            }
+        });
+    };
+
     const loadMachine = (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -269,117 +383,7 @@ const DfaNfaVisualizer = () => {
         const reader = new FileReader();
         reader.onload = (e) => {
             const data = JSON.parse(e.target.result);
-            graph.clear();
-            setStates([]);
-            setTransitions([]);
-            setStateCounter(0);
-            setAcceptingStates(new Set());
-
-            const stateMap = {};
-            const newAcceptingStates = new Set();
-
-            setStartingState(data.startState);
-            setMachineType(data.machineType);
-            data.states.forEach(state => {
-                const circle = new shapes.standard.Circle({
-                    id: state.id  // Set the ID explicitly
-                });
-                circle.position(state.x, state.y);
-                circle.resize(60, 60);
-                circle.attr({
-                    body: {
-                        fill: state.isAccepting ? '#90EE90' : data.startState === circle.id ? '#FFE4E1':'#ccccff',
-                        strokeWidth: 3
-                    },
-                    label: { text: state.label, fill: 'black', fontWeight: 'bold' },
-                });
-                circle.addTo(graph);
-
-                stateMap[state.id] = circle.id;
-                if (state.isAccepting) {
-                    newAcceptingStates.add(circle.id);
-                }
-
-                setStates(prevStates => [
-                    ...prevStates,
-                    { id: circle.id, label: state.label, node: circle }
-                ]);
-                setStateCounter(prevCounter => prevCounter + 1);
-            });
-
-            setAcceptingStates(newAcceptingStates);
-
-            data.transitions.forEach(transition => {
-                const sourceStateId = stateMap[transition.sourceId];
-                const targetStateId = stateMap[transition.targetId];
-
-                if (sourceStateId && targetStateId) {
-                    const existingLink = graph.getLinks().find(link => {
-                        const sourceId = link.getSourceElement().id;
-                        const targetId = link.getTargetElement().id;
-                        return sourceId === sourceStateId && targetId === targetStateId;
-                    });
-
-                    if (existingLink) {
-                        const existingLabel = existingLink.labels()[0].attrs.text.text;
-                        existingLink.labels([{
-                            attrs: { text: { text: `${existingLabel}, ${transition.label}`, fontSize: 14, fontWeight: 'bold' } },
-                            position: 0.5,
-                        }]);
-                    } else {
-                        const link = new shapes.standard.Link();
-                        link.source({ id: sourceStateId });
-                        link.target({ id: targetStateId });
-
-                        if (sourceStateId === targetStateId) {
-                            link.router({
-                                name: 'manhattan',
-                                args: {
-                                    padding: 20,
-                                    startDirections: ['top'],
-                                    endDirections: ['bottom'],
-                                },
-                            });
-                            link.connector('rounded');
-                        } else {
-                            link.router({
-                                name: 'manhattan',
-                                args: {
-                                    padding: 20,
-                                    startDirections: ['top', 'left', 'bottom', 'right'],
-                                    endDirections: ['top', 'left', 'bottom', 'right'],
-                                },
-                            });
-                        }
-
-                        link.attr({
-                            line: {
-                                stroke: 'black',
-                                strokeWidth: 2,
-                                targetMarker: { type: 'path', d: 'M 10 -5 0 0 10 5 Z', fill: 'black' },
-                            },
-                        });
-
-                        link.labels([{
-                            attrs: { text: { text: transition.label, fontSize: 14, fontWeight: 'bold' } },
-                            position: 0.5,
-                        }]);
-
-                        link.addTo(graph);
-                    }
-
-                    setTransitions(prevTransitions => [
-                        ...prevTransitions,
-                        {
-                            sourceId: transition.sourceId,
-                            targetId: transition.targetId,
-                            label: transition.label,
-                            source: transition.source,
-                            target: transition.target
-                        }
-                    ]);
-                }
-            });
+            renderMachineData(data);
         };
         reader.readAsText(file);
     };
@@ -459,66 +463,61 @@ const DfaNfaVisualizer = () => {
             return;
         }
 
+        // Optimized transition lookup: Map source and label to array of targets
+        const transitionMap = new Map();
+        const epsilonMap = new Map();
+
+        transitions.forEach(t => {
+            if (t.label === "ε") {
+                if (!epsilonMap.has(t.source)) {
+                    epsilonMap.set(t.source, []);
+                }
+                epsilonMap.get(t.source).push(t.target);
+            } else {
+                const key = `${t.source}-${t.label}`;
+                if (!transitionMap.has(key)) {
+                    transitionMap.set(key, []);
+                }
+                transitionMap.get(key).push(t.target);
+            }
+        });
+
         // Helper function to perform DFS from a given state with remaining input
-        const dfs = (currentState, remainingInput, currentPath) => {
-            // If we've processed all input, explore epsilon transitions and check accepting states
+        const dfs = (currentState, remainingInput, currentPath, visitedEpsilon = new Set()) => {
+            // Check if current state is accepting when no input remains
             if (remainingInput.length === 0) {
-                // Check if the current state is accepting
                 const stateObj = states.find(s => s.label === currentState);
                 if (stateObj && acceptingStates.has(stateObj.id)) {
-                    return {
-                        accepted: true,
-                        path: currentPath
-                    };
+                    return { accepted: true, path: currentPath };
                 }
+            }
 
-                // Explore epsilon transitions
-                const epsilonTransitions = transitions.filter(
-                    t => t.source === currentState && t.label === "ε"
-                );
-
-                for (const transition of epsilonTransitions) {
+            // Try epsilon transitions first (can happen with or without input)
+            const epsTargets = epsilonMap.get(currentState) || [];
+            for (const target of epsTargets) {
+                if (!visitedEpsilon.has(target)) {
                     const result = dfs(
-                        transition.target,
-                        remainingInput, // Keep input unchanged for epsilon transitions
-                        [...currentPath, transition.target]
+                        target,
+                        remainingInput,
+                        [...currentPath, target],
+                        new Set([...visitedEpsilon, target])
                     );
-
-                    // If an accepting path is found, return it
-                    if (result) {
-                        return result;
-                    }
-                }
-
-                // If no accepting path is found, return null
-                return null;
-            }
-
-            // Process the next symbol in the input
-            const symbol = remainingInput[0];
-            const restInput = remainingInput.slice(1);
-
-            // Find all possible transitions for the current symbol or epsilon
-            const possibleTransitions = transitions.filter(
-                t => t.source === currentState && (t.label === symbol || t.label === "ε")
-            );
-
-            // Try each possible transition
-            for (const transition of possibleTransitions) {
-                const result = dfs(
-                    transition.target,
-                    //if the transition label is epsilon dont splice the remaining input
-                    transition.label === "ε" ? remainingInput : restInput,
-                    [...currentPath, transition.target]
-                );
-
-                // If an accepting path is found, return it
-                if (result) {
-                    return result;
+                    if (result) return result;
                 }
             }
 
-            // If no accepting path is found, return null
+            // If input remains, try symbol transitions
+            if (remainingInput.length > 0) {
+                const symbol = remainingInput[0];
+                const restInput = remainingInput.slice(1);
+                const nextStates = transitionMap.get(`${currentState}-${symbol}`) || [];
+
+                for (const target of nextStates) {
+                    const result = dfs(target, restInput, [...currentPath, target], new Set());
+                    if (result) return result;
+                }
+            }
+
             return null;
         };
 
@@ -628,6 +627,47 @@ const DfaNfaVisualizer = () => {
         });
     };
   // Handle file uploads for equivalence testing
+  const loadExample = (type) => {
+    let data;
+    if (type === 'DFA_ENDS_WITH_1') {
+      data = {
+        machineType: 'DFA',
+        startState: 'q0_id',
+        states: [
+          { id: 'q0_id', label: 'q0', x: 120, y: 100, isAccepting: false },
+          { id: 'q1_id', label: 'q1', x: 260, y: 100, isAccepting: true }
+        ],
+        transitions: [
+          { sourceId: 'q0_id', targetId: 'q0_id', label: '0', source: 'q0', target: 'q0' },
+          { sourceId: 'q0_id', targetId: 'q1_id', label: '1', source: 'q0', target: 'q1' },
+          { sourceId: 'q1_id', targetId: 'q0_id', label: '0', source: 'q1', target: 'q0' },
+          { sourceId: 'q1_id', targetId: 'q1_id', label: '1', source: 'q1', target: 'q1' }
+        ]
+      };
+    } else if (type === 'NFA_CONTAINS_101') {
+      data = {
+        machineType: 'NFA',
+        startState: 'q0_id',
+        states: [
+          { id: 'q0_id', label: 'q0', x: 100, y: 100, isAccepting: false },
+          { id: 'q1_id', label: 'q1', x: 240, y: 100, isAccepting: false },
+          { id: 'q2_id', label: 'q2', x: 380, y: 100, isAccepting: false },
+          { id: 'q3_id', label: 'q3', x: 520, y: 100, isAccepting: true }
+        ],
+        transitions: [
+          { sourceId: 'q0_id', targetId: 'q0_id', label: '0', source: 'q0', target: 'q0' },
+          { sourceId: 'q0_id', targetId: 'q0_id', label: '1', source: 'q0', target: 'q0' },
+          { sourceId: 'q0_id', targetId: 'q1_id', label: '1', source: 'q0', target: 'q1' },
+          { sourceId: 'q1_id', targetId: 'q2_id', label: '0', source: 'q1', target: 'q2' },
+          { sourceId: 'q2_id', targetId: 'q3_id', label: '1', source: 'q2', target: 'q3' },
+          { sourceId: 'q3_id', targetId: 'q3_id', label: '0', source: 'q3', target: 'q3' },
+          { sourceId: 'q3_id', targetId: 'q3_id', label: '1', source: 'q3', target: 'q3' }
+        ]
+      };
+    }
+
+    if (data) renderMachineData(data);
+  };
   const handleDfaFileUpload = (fileNumber, event) => {
     const file = event.target.files[0];
     if (file) {
@@ -771,6 +811,218 @@ const DfaNfaVisualizer = () => {
         });
     };
 
+    const convertNfaToDfa = () => {
+        if (machineType !== 'NFA' || !startState) {
+            alert('Please select NFA mode and ensure a start state is set.');
+            return;
+        }
+
+        // 1. Build transition and epsilon maps
+        const transitionMap = new Map();
+        const epsilonMap = new Map();
+        const alphabet = new Set();
+
+        transitions.forEach(t => {
+            if (t.label === 'ε') {
+                if (!epsilonMap.has(t.sourceId)) epsilonMap.set(t.sourceId, []);
+                epsilonMap.get(t.sourceId).push(t.targetId);
+            } else {
+                alphabet.add(t.label);
+                const key = `${t.sourceId}-${t.label}`;
+                if (!transitionMap.has(key)) transitionMap.set(key, []);
+                transitionMap.get(key).push(t.targetId);
+            }
+        });
+
+        // 2. Epsilon closure helper
+        const getEpsilonClosure = (stateIds) => {
+            const closure = new Set(stateIds);
+            const stack = [...stateIds];
+
+            while (stack.length > 0) {
+                const current = stack.pop();
+                const eps = epsilonMap.get(current) || [];
+                eps.forEach(nextState => {
+                    if (!closure.has(nextState)) {
+                        closure.add(nextState);
+                        stack.push(nextState);
+                    }
+                });
+            }
+            return Array.from(closure).sort();
+        };
+
+        // 3. Setup Subset Construction
+        const initialClosure = getEpsilonClosure([startState]);
+        const closureKey = (arr) => arr.join(',');
+
+        const visitedClosures = new Set();
+        const queue = [initialClosure];
+        visitedClosures.add(closureKey(initialClosure));
+
+        const dfaStates = [];
+        const dfaTransitions = [];
+        const stateMap = new Map();
+
+        let stateIdCounter = 0;
+
+        const getOrCreateDfaState = (closure) => {
+            const key = closureKey(closure);
+            if (stateMap.has(key)) return stateMap.get(key);
+
+            const isAccepting = closure.some(id => acceptingStates.has(id));
+            const labels = closure.map(id => states.find(s => s.id === id)?.label).filter(Boolean);
+            const label = `{${labels.join(',')}}` || `S${stateIdCounter}`;
+
+            const newState = {
+                id: `dfa_s${stateIdCounter++}`,
+                label,
+                closure,
+                isAccepting
+            };
+
+            stateMap.set(key, newState);
+            dfaStates.push(newState);
+            return newState;
+        };
+
+        const startDfaState = getOrCreateDfaState(initialClosure);
+
+        while (queue.length > 0) {
+            const currentClosure = queue.shift();
+            const currentDfaState = getOrCreateDfaState(currentClosure);
+
+            alphabet.forEach(symbol => {
+                const moveTargets = new Set();
+                currentClosure.forEach(stateId => {
+                    const targets = transitionMap.get(`${stateId}-${symbol}`) || [];
+                    targets.forEach(t => moveTargets.add(t));
+                });
+
+                if (moveTargets.size > 0) {
+                    const nextClosure = getEpsilonClosure(Array.from(moveTargets));
+                    const key = closureKey(nextClosure);
+
+                    const nextDfaState = getOrCreateDfaState(nextClosure);
+
+                    dfaTransitions.push({
+                        sourceId: currentDfaState.id,
+                        targetId: nextDfaState.id,
+                        label: symbol,
+                        source: currentDfaState.label,
+                        target: nextDfaState.label
+                    });
+
+                    if (!visitedClosures.has(key)) {
+                        visitedClosures.add(key);
+                        queue.push(nextClosure);
+                    }
+                }
+            });
+        }
+
+        // Render the new DFA on canvas
+        graph.clear();
+        setStates([]);
+        setTransitions([]);
+        setStateCounter(0);
+        setAcceptingStates(new Set());
+        setStartState(null);
+        setMachineType('DFA');
+
+        const circlesPerRow = 5;
+        const horizontalSpacing = 140;
+        const verticalSpacing = 140;
+        const startX = 120;
+        const startY = 100;
+
+        const newStates = [];
+        const newAccepting = new Set();
+
+        dfaStates.forEach((st, idx) => {
+            const x = startX + (idx % circlesPerRow) * horizontalSpacing;
+            const y = startY + Math.floor(idx / circlesPerRow) * verticalSpacing;
+
+            const circle = new shapes.standard.Circle({ id: st.id });
+            circle.position(x, y);
+            circle.resize(60, 60);
+            circle.attr({
+                body: {
+                    fill: st.isAccepting ? '#90EE90' : st.id === startDfaState.id ? '#FFE4E1' : '#ccccff',
+                    strokeWidth: 3
+                },
+                label: { text: st.label, fill: 'black', fontWeight: 'bold' }
+            });
+            circle.addTo(graph);
+
+            if (st.isAccepting) newAccepting.add(st.id);
+            newStates.push({ id: st.id, label: st.label, node: circle });
+        });
+
+        setStates(newStates);
+        setStateCounter(dfaStates.length);
+        setAcceptingStates(newAccepting);
+        setStartState(startDfaState.id);
+
+        const linkMap = new Map();
+        dfaTransitions.forEach(tr => {
+            const key = `${tr.sourceId}-${tr.targetId}`;
+            if (!linkMap.has(key)) linkMap.set(key, []);
+            linkMap.get(key).push(tr.label);
+        });
+
+        const newTransitions = [];
+
+        linkMap.forEach((labels, key) => {
+            const [sourceId, targetId] = key.split('-');
+            const combinedLabel = labels.join(', ');
+
+            const link = new shapes.standard.Link();
+            link.source({ id: sourceId });
+            link.target({ id: targetId });
+
+            if (sourceId === targetId) {
+                link.router({
+                    name: 'manhattan',
+                    args: { padding: 20, startDirections: ['top'], endDirections: ['bottom'] }
+                });
+                link.connector('rounded');
+            } else {
+                link.router({
+                    name: 'manhattan',
+                    args: { padding: 20, startDirections: ['top', 'left', 'bottom', 'right'], endDirections: ['top', 'left', 'bottom', 'right'] }
+                });
+            }
+
+            link.attr({
+                line: {
+                    stroke: 'black',
+                    strokeWidth: 2,
+                    targetMarker: { type: 'path', d: 'M 10 -5 0 0 10 5 Z', fill: 'black' }
+                }
+            });
+
+            link.labels([{
+                attrs: { text: { text: combinedLabel, fontSize: 14, fontWeight: 'bold' } },
+                position: 0.5
+            }]);
+
+            link.addTo(graph);
+
+            labels.forEach(lbl => {
+                newTransitions.push({
+                    sourceId,
+                    targetId,
+                    label: lbl,
+                    source: dfaStates.find(s => s.id === sourceId)?.label,
+                    target: dfaStates.find(s => s.id === targetId)?.label
+                });
+            });
+        });
+
+        setTransitions(newTransitions);
+    };
+
     const clearMachine = () => {
         // Clear the graph
         graph.clear();
@@ -812,6 +1064,20 @@ const DfaNfaVisualizer = () => {
                         Load Machine
                     </button>
                     <button onClick={clearMachine} className="button">Clear Machine</button>
+                    {machineType === "NFA" && (
+                        <button onClick={convertNfaToDfa} className="button" style={{ marginLeft: '5px', backgroundColor: '#10b981' }}>
+                            Convert to DFA
+                        </button>
+                    )}
+                    {machineType === "DFA" && (
+                        <button onClick={() => alert('Minimization coming soon!')} className="button" style={{ marginLeft: '5px', backgroundColor: '#f59e0b' }}>
+                            Minimize DFA
+                        </button>
+                    )}
+                    <div style={{ marginTop: '10px' }}>
+                        <button onClick={() => loadExample('DFA_ENDS_WITH_1')} className="button">Load Example 1</button>
+                        <button onClick={() => loadExample('NFA_CONTAINS_101')} className="button" style={{ marginLeft: '5px' }}>Load Example 2</button>
+                    </div>
                     {machineType === "NFA" &&
                         (
                             <h4 style={{color : 'black'}}>Epsilon symbol for NFA (copy and paste) ε</h4>
